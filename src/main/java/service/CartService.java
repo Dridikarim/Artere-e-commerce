@@ -1,6 +1,7 @@
 package service;
 
 import dto.CartItemRequest;
+import dto.CartItemUpdateRequest;
 import entity.Cart;
 import entity.CartItem;
 import entity.Product;
@@ -56,10 +57,27 @@ import repository.CartRepository;
             return cart;
         }
 
-        public Cart removeItem(Long cartId, Long productId) {
-            Cart cart = get(cartId);
-            cart.getItems().removeIf(i -> i.getProduct().getId().equals(productId));
-            return cart;
+    public Cart updateItem(Long cartId, Long productId, CartItemUpdateRequest r) throws BadRequestException {
+        Cart cart = get(cartId);
+        CartItem item = cart.getItems().stream()
+                .filter(i -> i.getProduct().getId().equals(productId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Produit absent du panier: " + productId));
+
+        if (r.quantity() > item.getProduct().getStock()) {
+            throw new BadRequestException(
+                    "Stock insuffisant (disponible : " + item.getProduct().getStock() + ")");
         }
+        item.setQuantity(r.quantity());
+        return cart;
+    }
+    public Cart removeItem(Long cartId, Long productId) {
+        Cart cart = get(cartId);
+        boolean removed = cart.getItems().removeIf(i -> i.getProduct().getId().equals(productId));
+        if (!removed) {
+            throw new NotFoundException("Produit absent du panier: " + productId);
+        }
+        return cart;
+    }
     }
 
