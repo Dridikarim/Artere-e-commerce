@@ -1,4 +1,6 @@
 package dto;
 
-public class CategoryRequest {
+import jakarta.validation.constraints.NotBlank;
+
+public record CategoryRequest(@NotBlank String name, String description, Long parentId) {
 }
